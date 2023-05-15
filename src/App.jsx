@@ -64,9 +64,9 @@ function App() {
   return (
     <>
       <div className="App">Video Calling</div>
-      <video ref={myVideoRef} autoPlay muted playsInline />
+      <video ref={myVideoRef} autoPlay playsInline />
       <br />
-      <video ref={peerVideoRef} muted autoPlay playsInline />
+      <video ref={peerVideoRef} autoPlay playsInline />
       <br />
       <br />
       <input type="text" placeholder="Enter peer id" onChange={handlePeerId} />
