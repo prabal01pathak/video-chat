@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeerJS Calling</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.2/peerjs.min.js"></script>
+  </head>
+  <body>
+    <h1>PeerJS Calling Example</h1>
+    <button id="startButton">Start Video Call</button>
+    <button id="endButton" disabled>End Video Call</button>
+    <video id="localVideo" muted autoplay></video>
+    <video id="remoteVideo" autoplay></video>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script>
+      const startButton = document.getElementById("startButton");
+      const endButton = document.getElementById("endButton");
+      const localVideo = document.getElementById("localVideo");
+      const remoteVideo = document.getElementById("remoteVideo");
+
+      let localStream = null;
+      let peer = null;
+      let call = null;
+
+      startButton.addEventListener("click", startVideoCall);
+      endButton.addEventListener("click", endVideoCall);
+      localStream = navigator.mediaDevices
+        .getUserMedia({
+          video: true,
+          audio: true,
+        })
+        .then((stream) => {
+          localStream = stream;
+          localVideo.srcObject = localStream;
+        });
+      // Initialize PeerJS
+      peer = new Peer("peer");
+
+      // Handle PeerJS events
+      peer.on("open", () => {
+        console.log("Peer ID:", peer.id);
+        endButton.disabled = false;
+      });
+      peer.on("connection", (remoteConnection) => {
+        console.log("connection: ", connection);
+        connection = remoteConnection;
+      });
+
+      peer.on("call", incomingCall);
+      const connectWithPeer = (id) => {
+        connection = peer.connect(id);
+        console.log("connection: ", connection);
+        connection.on("open", () => {
+          console.log("connected to peer");
+        });
+        connection.on("error", (err) => {
+          console.log("error in connection: ", err);
+        });
+
+        connection.on("close", () => {
+          console.log("connection closed");
+          endVideoCall();
+        });
+      };
+      let connection = null;
+
+      async function startVideoCall() {
+        try {
+          // Get local video stream
+          // Call a remote peer
+          const remotePeerId = prompt("Enter remote peer ID:");
+          call = peer.call(remotePeerId, localStream, {
+            metadata: {
+              name: "Prabal Pathak",
+              deviceID: "234234",
+            },
+          });
+          connectWithPeer(remotePeerId);
+
+          // Handle call events
+          call.on("stream", handleRemoteStream);
+          call.on("close", endVideoCall);
+        } catch (error) {
+          console.error("Error starting video call:", error);
+        }
+      }
+
+      function endVideoCall() {
+        console.log("Ending call");
+        if (call) {
+          console.log("closing the call: ", call);
+          call.close();
+          call = null;
+        }
+        if (connection) {
+          console.log("closing the connection", connection);
+          connection.close();
+          connection = null;
+        }
+        if (localStream) {
+          localStream.getTracks().forEach((track) => track.stop());
+          localStream = null;
+        }
+        localVideo.srcObject = null;
+        remoteVideo.srcObject = null;
+        endButton.disabled = true;
+      }
+
+      function incomingCall(incomingCall) {
+        if (!call) {
+          console.log("incomming call: ", incomingCall);
+          call = incomingCall;
+          const response = confirm(`Answer incoming call from ${call.peer}?`);
+          console.log("response: ", response);
+          if (!response) {
+            console.log("call closed rejected", connection);
+            if (call) {
+              call.close();
+            }
+            if (call) {
+              call.close();
+              call = null;
+            }
+            if (connection) {
+              console.log("connection closed from incoming call");
+              connection.close();
+              connection = null;
+            }
+            if (connection) {
+              console.log("connection closed 2nd time from incoming call");
+              connection.close();
+              connection = null;
+            }
+            console.log("call closed from incoming call main");
+            return;
+          }
+          console.log("accepeted the call");
+          call.answer(localStream);
+          call.on("stream", handleRemoteStream);
+          call.on("close", endVideoCall);
+        } else {
+          incomingCall.close();
+        }
+      }
+
+      function handleRemoteStream(remoteStream) {
+        remoteVideo.srcObject = remoteStream;
+      }
+    </script>
+  </body>
+</html>
