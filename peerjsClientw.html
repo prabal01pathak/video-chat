@@ -25,15 +25,28 @@
 
       startButton.addEventListener("click", startVideoCall);
       endButton.addEventListener("click", endVideoCall);
+      // localStream = navigator.mediaDevices
+      //   .getUserMedia({
+      //     video: true,
+      //     // video: { mediaSource: "screen" },
+      //     audio: true,
+      //   })
+      //   .then((stream) => {
+      //     localStream = stream;
+      //     localVideo.srcObject = localStream;
+      //   });
+
       localStream = navigator.mediaDevices
-        .getUserMedia({
-          video: true,
-          audio: true,
+        .getDisplayMedia({
+          // video: true,
+          video: { cursor: "always" },
+          audio: false,
         })
         .then((stream) => {
           localStream = stream;
           localVideo.srcObject = localStream;
         });
+
       // Initialize PeerJS
       peer = new Peer("peer");
 
