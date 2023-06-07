@@ -24,9 +24,9 @@ function App() {
     };
     const ConnectWithSocketIOServer = () => {
       const eventId = "234";
-      const employeeId = "f7a499ae4d55414392e148066639ddf9";
+      const employeeId = "e82d655043d248f99e3488bee7fee10e";
       // const socket = io("http://localhost:8080", {
-      const socket = io("https://security-mechanics-vmwe4oziqq-du.a.run.app", {
+      const socket = io("http://localhost:8080", {
         path: "/socket/sockets",
         query: {
           eventId: eventId,
@@ -41,7 +41,10 @@ function App() {
 
       // socket.on("get-twilio-token", (data) => {
       // console.log("get-twilio-token: ", data);
-      const peer = new Peer("peer");
+      const peer = new Peer("e82d655043d248f99e3488bee7fee10e", {
+        host: "signaling-be-ms-vmwe4oziqq-el.a.run.app",
+        port: 443,
+      });
       console.log("peer: ", peer);
       peerRef.current = peer;
       peer.on("open", (id) => {
@@ -49,7 +52,7 @@ function App() {
         socket.emit("new-call-id", {
           callId: id,
           eventId: "event123233",
-          employeeId: "ced79033b90f4f0495d750ddf29c9cec",
+          employeeId: "e82d655043d248f99e3488bee7fee10e",
           clientId: "client_id",
         });
         // });

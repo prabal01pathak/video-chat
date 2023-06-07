@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PeerJS Calling</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.2/peerjs.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   </head>
   <body>
     <h1>PeerJS Calling Example</h1>
@@ -25,39 +26,62 @@
 
       startButton.addEventListener("click", startVideoCall);
       endButton.addEventListener("click", endVideoCall);
-      // localStream = navigator.mediaDevices
-      //   .getUserMedia({
-      //     video: true,
-      //     // video: { mediaSource: "screen" },
-      //     audio: true,
-      //   })
-      //   .then((stream) => {
-      //     localStream = stream;
-      //     localVideo.srcObject = localStream;
-      //   });
-
       localStream = navigator.mediaDevices
-        .getDisplayMedia({
-          // video: true,
-          video: { cursor: "always" },
-          audio: false,
+        .getUserMedia({
+          video: true,
+          // video: { mediaSource: "screen" },
+          audio: true,
         })
         .then((stream) => {
           localStream = stream;
           localVideo.srcObject = localStream;
         });
 
+      // localStream = navigator.mediaDevices
+      //   .getDisplayMedia({
+      //     // video: true,
+      //     video: { cursor: "always" },
+      //     audio: false,
+      //   })
+      //   .then((stream) => {
+      //     localStream = stream;
+      //     localVideo.srcObject = localStream;
+      //   });
+
       // Initialize PeerJS
-      peer = new Peer("peer");
+      peer = new Peer("e82d655043d248f99e3488bee7fee10e", {
+        host: "signaling-be-ms-vmwe4oziqq-el.a.run.app",
+        port: 443,
+      });
 
       // Handle PeerJS events
       peer.on("open", () => {
         console.log("Peer ID:", peer.id);
         endButton.disabled = false;
+        const socket = io(
+          "https://security-mechanics-vmwe4oziqq-du.a.run.app",
+          {
+            path: "/socket/sockets",
+            query: {
+              eventId: "342342",
+              employeeId: "e82d655043d248f99e3488bee7fee10e",
+            },
+          }
+        );
+        socket.emit("new-call-id", {
+          callId: peer.id,
+          eventId: "event123233",
+          employeeId: "e82d655043d248f99e3488bee7fee10e",
+          clientId: "client_id",
+        });
       });
       peer.on("connection", (remoteConnection) => {
         console.log("connection: ", connection);
         connection = remoteConnection;
+        connection.on("close", () => {
+          console.log("connection closed");
+          endVideoCall();
+        });
       });
 
       peer.on("call", incomingCall);
@@ -148,10 +172,13 @@
             console.log("call closed from incoming call main");
             return;
           }
-          console.log("accepeted the call");
+          console.log("hey eaccepeted the call");
           call.answer(localStream);
           call.on("stream", handleRemoteStream);
-          call.on("close", endVideoCall);
+          call.on("close", () => {
+            console.log("hey end video call event recieved: ");
+            endVideoCall;
+          });
         } else {
           incomingCall.close();
         }
